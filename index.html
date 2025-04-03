@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Calabozos & Dragones IA</title>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.6.0/firebase-firestore.js";
+
+        // Configuración CORRECTA de Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyCBQtWdxmj0cvzgLvqBaqFVhPvdm2tOyvM",
+            authDomain: "dungeonmasteria.firebaseapp.com",
+            projectId: "dungeonmasteria",
+            storageBucket: "dungeonmasteria.appspot.com",
+            messagingSenderId: "848507179919",
+            appId: "1:848507179919:web:8e1a257b3d9b068d73b1fa"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ===== FUNCIONES DE USUARIO =====
+        window.registrar = async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert("¡Nuevo guerrero registrado! 🛡️");
+            } catch (error) {
+                alert(`Error del Oráculo: ${error.message}`);
+            }
+        };
+
+        window.iniciarSesion = async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                document.getElementById("login-section").style.display = "none";
+                document.getElementById("game-section").style.display = "block";
+                alert("¡Bienvenido a la Taberna del Dragón! 🍻");
+            } catch (error) {
+                alert(`Error del Portal: ${error.message}`);
+            }
+        };
+
+        // ===== SISTEMA DE PERSONAJES =====
+        window.guardarPersonaje = async () => {
+            const user = auth.currentUser;
+            if (!user) return alert("¡Debes iniciar sesión primero!");
+
+            const personaje = {
+                nombre: document.getElementById("nombre").value,
+                raza: document.getElementById("raza").value,
+                clase: document.getElementById("clase").value,
+                fuerza: document.getElementById("fuerza").value,
+                destreza: document.getElementById("destreza").value,
+                carisma: document.getElementById("carisma").value
+            };
+
+            try {
+                await setDoc(doc(db, "personajes", user.uid), personaje);
+                alert("¡Personaje guardado en el Grimorio! 📖");
+            } catch (error) {
+                alert(`Error del Escriba: ${error.message}`);
+            }
+        };
+
+        window.cargarPersonaje = async () => {
+            const user = auth.currentUser;
+            if (!user) return alert("¡Inicia sesión primero!");
+
+            try {
+                const docSnap = await getDoc(doc(db, "personajes", user.uid));
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    document.getElementById("nombre").value = data.nombre;
+                    document.getElementById("raza").value = data.raza;
+                    document.getElementById("clase").value = data.clase;
+                    document.getElementById("fuerza").value = data.fuerza;
+                    document.getElementById("destreza").value = data.destreza;
+                    document.getElementById("carisma").value = data.carisma;
+                    alert("¡Personaje invocado! 🔮");
+                } else {
+                    alert("¡No tienes personajes guardados!");
+                }
+            } catch (error) {
+                alert(`Error del Archivo: ${error.message}`);
+            }
+        };
+    </script>
+    <style>
+        body {
+            background: #1a1a1a url('https://i.ibb.co/0jQdJ8N/dungeon-bg.jpg') center/cover;
+            color: #ffd700;
+            font-family: 'Arial', sans-serif;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        #login-section, .personaje-form {
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            width: 300px;
+            margin: 20px auto;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        input, button, select {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: 2px solid #4a2a0e;
+            border-radius: 5px;
+            background: #2a2a2a;
+            color: white;
+        }
+
+        button {
+            background: #4a2a0e;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>📜 El Libro de las Leyendas</h1>
+    
+    <!-- Sección de Login -->
+    <div id="login-section">
+        <input type="email" id="email" placeholder="📨 Correo del Guerrero">
+        <input type="password" id="password" placeholder="🗝️ Sello Secreto">
+        <button onclick="registrar()">⚔️ Registrar</button>
+        <button onclick="iniciarSesion()">🔥 Iniciar Aventura</button>
+    </div>
+
+    <!-- Sección del Juego -->
+    <div id="game-section" style="display: none;">
+        <h2>🧙 Forja tu Destino</h2>
+        <div class="personaje-form">
+            <input type="text" id="nombre" placeholder="Nombre del Héroe">
+            <select id="raza">
+                <option>Humano</option>
+                <option>Elfo</option>
+                <option>Enano</option>
+            </select>
+            <select id="clase">
+                <option>Guerrero</option>
+                <option>Mago</option>
+                <option>Ladrón</option>
+            </select>
+            <input type="number" id="fuerza" placeholder="Fuerza (1-20)" min="1" max="20">
+            <input type="number" id="destreza" placeholder="Destreza (1-20)" min="1" max="20">
+            <input type="number" id="carisma" placeholder="Carisma (1-20)" min="1" max="20">
+            <button onclick="guardarPersonaje()">💾 Guardar Personaje</button>
+            <button onclick="cargarPersonaje()">🔍 Cargar Personaje</button>
+        </div>
+    </div>
+</body>
+</html>
